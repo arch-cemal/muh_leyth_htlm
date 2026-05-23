@@ -1,0 +1,11 @@
+{
+  "name": "my-html-app",
+  "main": "index.html",
+  "window": {
+    "title": "My HTML Application",
+    "width": 1000,
+    "height": 700,
+    "toolbar": false,
+    "icon": "icon.png"
+  }
+}
