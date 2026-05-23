@@ -18,13 +18,20 @@ jobs:
       with:
         node-version: '18'
 
-    - name: Install NW.js Builder
-      run: npm install -g nwjs-builder-phoenix
-
-    - name: Build Windows Executable
+    - name: Initialize Project Package
       run: |
-        # هذا الأمر يقوم بتجميع ملف الـ HTML والـ json وضغطهم في تطبيق وندوز 64-بت
-        nwbuild --platforms win64 --outputDir dist/ .
+        if (-not (Test-Path package.json)) {
+          '{"name": "html-app", "main": "index.html", "window": {"title": "Application", "width": 1000, "height": 700, "toolbar": false}}' | Out-File -Encoding utf8 package.json
+        }
+
+    - name: Install NW.js Builder Locally
+      run: |
+        npm install nwjs-builder-phoenix
+
+    - name: Build Windows Executable Using npx
+      run: |
+        # استخدام npx يضمن تشغيل الأداة مباشرة بدون مشاكل مسارات الوندوز
+        npx nwbuild --platforms win64 --outputDir dist/ .
 
     - name: Upload Windows Application Artifact
       uses: actions/upload-artifact@v4
