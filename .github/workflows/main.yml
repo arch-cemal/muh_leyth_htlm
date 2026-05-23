@@ -20,18 +20,17 @@ jobs:
 
     - name: Initialize Electron App Config
       run: |
-        # سيقوم السيرفر بتهيئة ملف الإعدادات وضبط الأوامر برمجياً لضمان الاستقرار
         $packageJson = @{
             name = "html-windows-app"
             version = "1.0.0"
             main = "main.js"
             scripts = @{
-                package = "electron-builder --win --x64"
+                # هنا أضفنا أمر منع النشر التلقائي لمنع حدوث خطأ الـ Token
+                package = "electron-builder --win --x64 --publish never"
             }
         } | ConvertTo-Json
         Set-Content -Path package.json -Value $packageJson -Encoding UTF8
 
-        # توليد ملف تشغيل النافذة الذكي تلقائياً لفتح واجهتك
         $mainJs = @'
         const { app, BrowserWindow } = require('electron')
         const path = require('path')
@@ -74,4 +73,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Electron-Windows-Application
-        path: dist/*.exe
+        # تعديل المسار لضمان رفع المجلد الناتج بالكامل بما فيه ملف الـ Setup والـ EXE المباشر
+        path: dist/
