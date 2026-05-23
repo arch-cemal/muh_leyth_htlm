@@ -1,4 +1,4 @@
-name: Build HTML to Windows EXE
+name: Build HTML to Windows EXE (Electron)
 
 on:
   push:
@@ -18,23 +18,60 @@ jobs:
       with:
         node-version: '18'
 
-    - name: Initialize Project Package
+    - name: Initialize Electron App Config
       run: |
-        if (-not (Test-Path package.json)) {
-          '{"name": "html-app", "main": "index.html", "window": {"title": "Application", "width": 1000, "height": 700, "toolbar": false}}' | Out-File -Encoding utf8 package.json
+        # سيقوم السيرفر بتهيئة ملف الإعدادات وضبط الأوامر برمجياً لضمان الاستقرار
+        $packageJson = @{
+            name = "html-windows-app"
+            version = "1.0.0"
+            main = "main.js"
+            scripts = @{
+                package = "electron-builder --win --x64"
+            }
+        } | ConvertTo-Json
+        Set-Content -Path package.json -Value $packageJson -Encoding UTF8
+
+        # توليد ملف تشغيل النافذة الذكي تلقائياً لفتح واجهتك
+        $mainJs = @'
+        const { app, BrowserWindow } = require('electron')
+        const path = require('path')
+
+        function createWindow () {
+          const win = new BrowserWindow({
+            width: 1100,
+            height: 750,
+            autoHideMenuBar: true,
+            webPreferences: {
+              nodeIntegration: true
+            }
+          })
+          win.loadFile('index.html')
         }
 
-    - name: Install NW.js Builder Locally
-      run: |
-        npm install nwjs-builder-phoenix
+        app.whenReady().then(() => {
+          createWindow()
+          app.on('activate', () => {
+            if (BrowserWindow.getAllWindows().length === 0) createWindow()
+          })
+        })
 
-    - name: Build Windows Executable Using npx
+        app.on('window-all-closed', () => {
+          if (process.platform !== 'darwin') app.quit()
+        })
+        '@
+        Set-Content -Path main.js -Value $mainJs -Encoding UTF8
+
+    - name: Install Electron and Builder
       run: |
-        # استخدام npx يضمن تشغيل الأداة مباشرة بدون مشاكل مسارات الوندوز
-        npx nwbuild --platforms win64 --outputDir dist/ .
+        npm install electron --save-dev
+        npm install electron-builder --save-dev
+
+    - name: Build Production EXE Package
+      run: |
+        npm run package
 
     - name: Upload Windows Application Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: HTML-Windows-Application
-        path: dist/
+        name: Electron-Windows-Application
+        path: dist/*.exe
