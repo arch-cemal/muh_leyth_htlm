@@ -1,0 +1,33 @@
+name: Build HTML to Windows EXE
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js Environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install NW.js Builder
+      run: npm install -g nwjs-builder-phoenix
+
+    - name: Build Windows Executable
+      run: |
+        # هذا الأمر يقوم بتجميع ملف الـ HTML والـ json وضغطهم في تطبيق وندوز 64-بت
+        nwbuild --platforms win64 --outputDir dist/ .
+
+    - name: Upload Windows Application Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: HTML-Windows-Application
+        path: dist/
